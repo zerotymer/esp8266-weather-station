@@ -48,10 +48,10 @@ See more at https://thingpulse.com
  **************************/
 
 // WIFI
-const char* WIFI_SSID = "yourssid";
-const char* WIFI_PWD = "yourpassw0rd";
+const char* WIFI_SSID = "TP-HERA";
+const char* WIFI_PWD = "R442r6,gik";
 
-#define TZ              2       // (utc+) TZ in hours
+#define TZ              9       // (utc+) TZ in hours
 #define DST_MN          60      // use 60mn for summer time in some countries
 
 // Setup
