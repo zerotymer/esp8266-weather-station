@@ -300,7 +300,7 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
 {
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 38 + y, currentWeather.description);
+  display->drawString(64 + x, 36 + y, currentWeather.description);
 
   display->setFont(ArialMT_Plain_24);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
