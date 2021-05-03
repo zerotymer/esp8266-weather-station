@@ -28,6 +28,7 @@ See more at https://thingpulse.com
 #include <ESPWiFi.h>
 #include <ESPHTTPClient.h>
 #include <JsonListener.h>
+#include <DHTesp.h>
 
 // time
 #include <time.h>      // time() ctime()
@@ -64,6 +65,13 @@ const int SDC_PIN = D5;
 #else
 const int SDA_PIN = 2;  //IO2;
 const int SDC_PIN = 14; //IO14;
+#endif
+
+// DHT11 sensor Settings
+#if defined(ESP8266)
+const int DHT_PIN = D1;
+#else
+const int DHT_PIN = 5;  // IO5
 #endif
 
 // OpenWeatherMap Settings
@@ -127,18 +135,27 @@ void updateData(OLEDDisplay *display);
 void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
+void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
 void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex);
 void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state);
 void setReadyForWeatherUpdate();
+void updateTemperatureHumidity();
+
+// Sensor
+DHTesp dht;
 
 // Add frames
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
-FrameCallback frames[] = {drawDateTime, drawCurrentWeather, drawForecast};
-int numberOfFrames = 3;
+FrameCallback frames[] = {drawDateTime, drawCurrentWeather, drawForecast, drawTemperatureHumidity};
+int numberOfFrames = 4;
 
 OverlayCallback overlays[] = {drawHeaderOverlay};
 int numberOfOverlays = 1;
+
+// Humidity & Temperatrue
+float temperature;
+float humidity;
 
 void setup()
 {
@@ -155,6 +172,9 @@ void setup()
   display.setFont(ArialMT_Plain_10);
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setContrast(255);
+
+  // initialize sensor
+  dht.setup(DHT_PIN, DHTesp::DHT11);
 
   WiFi.begin(WIFI_SSID, WIFI_PWD);
 
@@ -267,11 +287,10 @@ void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->setFont(ArialMT_Plain_10);
   String date = WDAY_NAMES[timeInfo->tm_wday];
-
-  sprintf_P(buff, PSTR("%s, %02d/%02d/%04d"), WDAY_NAMES[timeInfo->tm_wday].c_str(), timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900);
+  sprintf_P(buff, PSTR("%02d/%02d/%04d %s"), timeInfo->tm_mday, timeInfo->tm_mon + 1, timeInfo->tm_year + 1900, WDAY_NAMES[timeInfo->tm_wday].c_str());
   display->drawString(64 + x, 5 + y, String(buff));
-  display->setFont(ArialMT_Plain_24);
 
+  display->setFont(ArialMT_Plain_24);
   sprintf_P(buff, PSTR("%02d:%02d:%02d"), timeInfo->tm_hour, timeInfo->tm_min, timeInfo->tm_sec);
   display->drawString(64 + x, 15 + y, String(buff));
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -286,11 +305,11 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
   display->setFont(ArialMT_Plain_24);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   String temp = String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F");
-  display->drawString(60 + x, 5 + y, temp);
+  display->drawString(32 + x, 5 + y, temp);
 
   display->setFont(Meteocons_Plain_36);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(32 + x, 0 + y, currentWeather.iconMeteoCon);
+  display->drawString(24 + x, 0 + y, currentWeather.iconMeteoCon);
 }
 
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
@@ -298,6 +317,18 @@ void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
   drawForecastDetails(display, x, y, 0);
   drawForecastDetails(display, x + 44, y, 1);
   drawForecastDetails(display, x + 88, y, 2);
+}
+
+void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
+{
+  char buff[16];
+  updateTemperatureHumidity();
+
+  display->setFont(ArialMT_Plain_24);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+
+  sprintf_P(buff, PSTR("%.0f°C  %.0f%%"), temperature, humidity);
+  display->drawString(64 + x, 5 + y, String(buff));
 }
 
 void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
@@ -339,4 +370,15 @@ void setReadyForWeatherUpdate()
 {
   Serial.println("Setting readyForUpdate to true");
   readyForWeatherUpdate = true;
+}
+
+void updateTemperatureHumidity()
+{
+  float temp = dht.getTemperature();
+  if (temp >= -20.0 && temp <= 60.0)
+    temperature = temp;
+
+  temp = dht.getHumidity();
+  if (temp >= 0.0 && temp <= 99.9)
+    humidity = temp;
 }
