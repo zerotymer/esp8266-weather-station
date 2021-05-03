@@ -185,6 +185,7 @@ void setup()
     Serial.print(".");
     display.clear();
     display.drawString(64, 10, "Connecting to WiFi");
+    display.drawString(64, 44, WIFI_SSID);
     display.drawXbm(46, 30, 8, 8, counter % 3 == 0 ? activeSymbole : inactiveSymbole);
     display.drawXbm(60, 30, 8, 8, counter % 3 == 1 ? activeSymbole : inactiveSymbole);
     display.drawXbm(74, 30, 8, 8, counter % 3 == 2 ? activeSymbole : inactiveSymbole);
@@ -300,7 +301,7 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
 {
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 36 + y, currentWeather.description);
+  display->drawString(64 + x, 34 + y, currentWeather.description);
 
   display->setFont(ArialMT_Plain_24);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
