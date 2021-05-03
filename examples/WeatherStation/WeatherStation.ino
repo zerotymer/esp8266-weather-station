@@ -305,7 +305,7 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
   display->setFont(ArialMT_Plain_24);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   String temp = String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F");
-  display->drawString(32 + x, 5 + y, temp);
+  display->drawString(40 + x, 5 + y, temp);
 
   display->setFont(Meteocons_Plain_36);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -314,9 +314,9 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
 
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
 {
-  drawForecastDetails(display, x, y, 0);
-  drawForecastDetails(display, x + 44, y, 1);
-  drawForecastDetails(display, x + 88, y, 2);
+  drawForecastDetails(display, x, y, 1);
+  drawForecastDetails(display, x + 44, y, 2);
+  drawForecastDetails(display, x + 88, y, 3);
 }
 
 void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
@@ -324,11 +324,15 @@ void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, in
   char buff[16];
   updateTemperatureHumidity();
 
-  display->setFont(ArialMT_Plain_24);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  String temp = String("temperature    humidity");
+  display->drawString(8 + x, 5 + y, temp);
 
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->setFont(ArialMT_Plain_24);
   sprintf_P(buff, PSTR("%.0f°C  %.0f%%"), temperature, humidity);
-  display->drawString(64 + x, 5 + y, String(buff));
+  display->drawString(64 + x, 15 + y, String(buff));
 }
 
 void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex)
