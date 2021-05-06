@@ -139,7 +139,8 @@ void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, in
 void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex);
 void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state);
 void setReadyForWeatherUpdate();
-void updateTemperatureHumidity();
+void updateTemperature();
+void updateHumidity();
 
 // Sensor
 DHTesp dht;
@@ -154,8 +155,8 @@ OverlayCallback overlays[] = {drawHeaderOverlay};
 int numberOfOverlays = 1;
 
 // Humidity & Temperatrue
-float temperature;
-float humidity;
+float temperature = 0.0;
+float humidity = 0.5;
 
 void setup()
 {
@@ -246,6 +247,8 @@ void loop()
     // Don't do stuff if you are below your
     // time budget.
     delay(remainingTimeBudget);
+    updateTemperature();
+    updateHumidity();
   }
 }
 
@@ -310,7 +313,7 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t
 
   display->setFont(Meteocons_Plain_36);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(24 + x, 0 + y, currentWeather.iconMeteoCon);
+  display->drawString(18 + x, 0 + y, currentWeather.iconMeteoCon);
 }
 
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
@@ -323,7 +326,6 @@ void drawForecast(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
 void drawTemperatureHumidity(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y)
 {
   char buff[16];
-  updateTemperatureHumidity();
 
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -366,7 +368,7 @@ void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state)
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(0, 54, String(buff));
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  String temp = String(currentWeather.temp, 1) + (IS_METRIC ? "°C" : "°F");
+  String temp = String(temperature, 1) + (IS_METRIC ? "°C" : "°F");
   display->drawString(128, 54, temp);
   display->drawHorizontalLine(0, 52, 128);
 }
@@ -377,13 +379,20 @@ void setReadyForWeatherUpdate()
   readyForWeatherUpdate = true;
 }
 
-void updateTemperatureHumidity()
+void updateTemperature()
 {
   float temp = dht.getTemperature();
-  if (temp >= -20.0 && temp <= 60.0)
-    temperature = temp;
+  if (isnan(temp))
+    return;
 
-  temp = dht.getHumidity();
-  if (temp >= 0.0 && temp <= 99.9)
-    humidity = temp;
+  temperature = temp;
+}
+
+void updateHumidity()
+{
+  float temp = dht.getHumidity();
+  if (isnan(temp))
+    return;
+
+  humidity = temp;
 }
